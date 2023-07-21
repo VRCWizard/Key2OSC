@@ -43,7 +43,7 @@
             // 
             this.textBox1.BackColor = System.Drawing.SystemColors.Window;
             this.textBox1.Enabled = false;
-            this.textBox1.Location = new System.Drawing.Point(58, 69);
+            this.textBox1.Location = new System.Drawing.Point(12, 27);
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
             this.textBox1.Size = new System.Drawing.Size(61, 23);
@@ -55,16 +55,16 @@
             // textBox2
             // 
             this.textBox2.ForeColor = System.Drawing.SystemColors.MenuText;
-            this.textBox2.Location = new System.Drawing.Point(58, 135);
+            this.textBox2.Location = new System.Drawing.Point(12, 93);
             this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(194, 23);
+            this.textBox2.Size = new System.Drawing.Size(209, 23);
             this.textBox2.TabIndex = 1;
             this.textBox2.Text = "/avatar/parameters/Flash";
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(58, 51);
+            this.label1.Location = new System.Drawing.Point(12, 9);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(43, 15);
             this.label1.TabIndex = 2;
@@ -73,17 +73,17 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(58, 117);
+            this.label2.Location = new System.Drawing.Point(12, 75);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(61, 15);
+            this.label2.Size = new System.Drawing.Size(96, 15);
             this.label2.TabIndex = 3;
-            this.label2.Text = "Parameter";
+            this.label2.Text = "Parameter (bool)";
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(58, 194);
+            this.button1.Location = new System.Drawing.Point(12, 138);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(114, 23);
+            this.button1.Size = new System.Drawing.Size(114, 36);
             this.button1.TabIndex = 4;
             this.button1.Text = "Start";
             this.button1.UseVisualStyleBackColor = true;
@@ -91,7 +91,7 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(125, 69);
+            this.button2.Location = new System.Drawing.Point(79, 27);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(47, 23);
             this.button2.TabIndex = 6;
@@ -102,9 +102,9 @@
             // button3
             // 
             this.button3.Enabled = false;
-            this.button3.Location = new System.Drawing.Point(178, 194);
+            this.button3.Location = new System.Drawing.Point(132, 138);
             this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(80, 23);
+            this.button3.Size = new System.Drawing.Size(89, 36);
             this.button3.TabIndex = 7;
             this.button3.Text = "Stop";
             this.button3.UseVisualStyleBackColor = true;
@@ -113,7 +113,7 @@
             // button4
             // 
             this.button4.Enabled = false;
-            this.button4.Location = new System.Drawing.Point(178, 69);
+            this.button4.Location = new System.Drawing.Point(132, 27);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(47, 23);
             this.button4.TabIndex = 8;
@@ -124,16 +124,17 @@
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.Color.White;
-            this.panel1.Location = new System.Drawing.Point(344, 207);
+            this.panel1.Location = new System.Drawing.Point(185, 18);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(36, 32);
             this.panel1.TabIndex = 9;
+            this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(392, 251);
+            this.ClientSize = new System.Drawing.Size(237, 188);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.button3);
