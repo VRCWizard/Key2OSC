@@ -25,25 +25,13 @@ namespace F4Fungal {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("F")]
-        public string Button {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string storedCommands {
             get {
-                return ((string)(this["Button"]));
+                return ((string)(this["storedCommands"]));
             }
             set {
-                this["Button"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("/avatar/parameters/Flash")]
-        public string Parameter {
-            get {
-                return ((string)(this["Parameter"]));
-            }
-            set {
-                this["Parameter"] = value;
+                this["storedCommands"] = value;
             }
         }
     }

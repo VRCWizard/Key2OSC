@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Key2OSC</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,6 +28,11 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings1.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="ExportList\" />
+    <Folder Include="ImportList\" />
   </ItemGroup>
 
 </Project>

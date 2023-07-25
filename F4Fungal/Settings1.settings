@@ -2,11 +2,8 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="F4Fungal" GeneratedClassName="Settings1">
   <Profiles />
   <Settings>
-    <Setting Name="Button" Type="System.String" Scope="User">
-      <Value Profile="(Default)">F</Value>
-    </Setting>
-    <Setting Name="Parameter" Type="System.String" Scope="User">
-      <Value Profile="(Default)">/avatar/parameters/Flash</Value>
+    <Setting Name="storedCommands" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

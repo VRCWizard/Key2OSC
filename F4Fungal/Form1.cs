@@ -1,5 +1,10 @@
 using CoreOSC;
+using Microsoft.VisualBasic;
+using System;
+using System.Diagnostics;
+using System.Net;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace F4Fungal
@@ -9,12 +14,13 @@ namespace F4Fungal
 
         public static UDPSender OSCSender;
         public static Form1 MainFormGlobal;
-        bool editMode = false;
         public Form1()
         {
             InitializeComponent();
             MainFormGlobal = this;
             OSCSender = new UDPSender("127.0.0.1", 9000);//9000
+            comboBoxType.SelectedIndex = 0;
+            voiceCommandsStored = Settings1.Default.storedCommands;
 
         }
 
@@ -27,11 +33,7 @@ namespace F4Fungal
         {
             if (e.KeyCode == Keys.Enter)
             {
-              //  TTSButton.PerformClick();
-
                 e.Handled = true;
-
-
             }
         }
 
@@ -67,82 +69,73 @@ namespace F4Fungal
 
                 System.Diagnostics.Debug.WriteLine("-------------get key press id: " + key.ToString());
 
-                if (id == 0)
-                {
-                    var message0 = new CoreOSC.OscMessage(MainFormGlobal.textBox2.Text.ToString(), true);
 
-                    OSCSender.Send(message0);
-                    MainFormGlobal.panel1.BackColor = Color.Green;
-                   // MainFormGlobal.textBox2.BackColor = Color.Green;
-                    //  MessageBox.Show("wa1");
-                    Thread.Sleep(100);
+                HotkeyPressed(id);
 
-                    var message1 = new CoreOSC.OscMessage(MainFormGlobal.textBox2.Text.ToString(), false);
-
-                    OSCSender.Send(message1);
-                   
-                   // Thread.Sleep(1000);
-                   // MainFormGlobal.textBox2.BackColor = Color.White;
-                    // MainFormGlobal.button1.ForeColor = Color.White;
-                    //  MessageBox.Show("wa2");
-
-                }
-      
-              
-
-                
             }
 
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
+
+
           
-            string normalKey = textBox1.Text.ToString();
-
-            Keys normKey;
-            Enum.TryParse(normalKey, out normKey);
-            RegisterHotKey(this.Handle, 0,0, normKey.GetHashCode());
-            button1.Enabled = false;
-
-            Settings1.Default.Button = textBox1.Text.ToString();
-            Settings1.Default.Parameter = textBox2.Text.ToString();
+            Settings1.Default.storedCommands = voiceCommandsStored;
             Settings1.Default.Save();
 
-            //textBox1.ReadOnly = true;
-            textBox2.ReadOnly = true;
-            // MessageBox.Show("wa1");
-            button3.Enabled = true;
+
+            int index = 0;
+           
+            foreach (var normalKey in VCButton)
+            {
+              
+                Keys normKey;
+
+                Enum.TryParse(normalKey, out normKey);
+                RegisterHotKey(this.Handle, index, 0, normKey.GetHashCode());
+                index++;
+
+            }
+            buttonStart.Enabled = false;
+            buttonStop.Enabled = true;
+            buttonAdd.Enabled = false;
+            deleteCommandsToggle.Enabled= false;
+
 
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            textBox1.Text = Settings1.Default.Button;
-            textBox2.Text = Settings1.Default.Parameter;
+            buttonCommands();
+            if (!Directory.Exists("ExportList"))
+            {
+                Directory.CreateDirectory("ExportList");
+            }
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            Settings1.Default.Button = textBox1.Text.ToString();
-            Settings1.Default.Parameter = textBox2.Text.ToString();
+            Settings1.Default.storedCommands = voiceCommandsStored;
             Settings1.Default.Save();
         }
 
         private void button3_Click(object sender, EventArgs e)
-        {
-            UnregisterHotKey(this.Handle,0);
-           // textBox1.ReadOnly = false;
-            textBox2.ReadOnly = false;
-
-            button1.Enabled=true;
-            button3.Enabled = false;
+        {     
+            for(int i = 0; i < VCButton.Count; i++)
+            {
+                UnregisterHotKey(this.Handle, i);
+            }
+            buttonStart.Enabled = true;
+            buttonAdd.Enabled = true;
+            buttonStop.Enabled = false;
+            deleteCommandsToggle.Enabled = true;
             MainFormGlobal.panel1.BackColor = Color.White;
         }
 
         private void textBox1_KeyDown(object sender, KeyEventArgs e)
         {
-            if (textBox1.Enabled == true)
+            if (textBoxButton.Enabled == true)
             {
                 Keys modifierKeys = e.Modifiers;
 
@@ -151,37 +144,241 @@ namespace F4Fungal
                 //do stuff with pressed and modifier keys
                 var converter = new KeysConverter();
 
-                textBox1.Text = converter.ConvertToString(pressedKey);
+                textBoxButton.Text = converter.ConvertToString(pressedKey);
             }
         }
 
-        private void textBox1_TextChanged(object sender, EventArgs e)
+
+
+        static List<string> VCButton = new List<string>();
+        static List<string> VCAddress = new List<string>();
+        static List<string> VCType = new List<string>();
+        static List<string> VCValue = new List<string>();
+
+
+        public static string voiceCommandsStored = "";
+
+    
+                
+        public static void clearButtonCommands()
         {
-            
+            VCAddress.Clear();
+            VCButton.Clear();
+            VCValue.Clear();
+            VCType.Clear();
+            //refreshCommandList();
+        }
+        public static void removeButtonCommandsAt(int index)
+        {
+            VCAddress.RemoveAt(index);
+            VCButton.RemoveAt(index);
+            VCValue.RemoveAt(index);
+            VCType.RemoveAt(index);
+           // refreshCommandList();
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        public static void voiceCommandsAdd()
         {
-            if (button1.Enabled == true)
+            clearButtonCommands();
+            voiceCommandsStored += $"{MainFormGlobal.textBoxButton.Text}:{MainFormGlobal.textBoxParameter.Text}:{MainFormGlobal.comboBoxType.SelectedItem}:{MainFormGlobal.textBoxValue.Text};";
+
+            buttonCommands();
+          //  refreshCommandList();
+
+        }
+
+        public static void buttonCommands()
+        {
+            string words = voiceCommandsStored;
+
+            string[] split = words.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string s in split)
             {
-                textBox1.Select();
-                textBox1.Enabled = true;
-                button4.Enabled = true;
-               // editMode = true;
+
+                if (s.Trim() != "")
+                {
+
+                    string words2 = s;
+                    int count = 1;
+
+                    string[] split2 = words2.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (string s2 in split2)
+                    {
+
+
+                        if (count == 1)
+                        {
+                            VCButton.Add(s2);
+                            System.Diagnostics.Debug.WriteLine("Phrase Added: " + s2);
+
+                        }
+                        if (count == 2)
+                        {
+                            VCAddress.Add(s2);
+                            System.Diagnostics.Debug.WriteLine("address added: " + s2);
+
+                        }
+                        if (count == 3)
+                        {
+                            VCType.Add(s2);
+                            System.Diagnostics.Debug.WriteLine("typeadded: " + s2);
+
+                        }
+                        if (count == 4)
+                        {
+                            VCValue.Add(s2);
+                            System.Diagnostics.Debug.WriteLine("value added: " + s2);
+
+                        }
+                        count++;
+                    }
+                }
+            }
+            refreshCommandList();
+        }
+        public static void HotkeyPressed(int index)
+        {    
+                string address = VCAddress[index];
+                string type = VCType[index];
+
+                 var message1 = new OscMessage(address, true);
+                 OSCSender.Send(message1);
+
+                 MainFormGlobal.panel1.BackColor = Color.Green;
+
+                 Thread.Sleep(100);
+
+                 var message2 = new CoreOSC.OscMessage(address, false);
+
+                 OSCSender.Send(message2);
+        }
+        public static void refreshCommandList()
+        {
+            MainFormGlobal.listBox1.Items.Clear();
+            voiceCommandsStored = "";
+            for (var index = 0; index < VCAddress.Count; index++)
+            {
+                commandListHelper($"ID: {index + 1} | Phrase: {VCButton[index]} | Address: {VCAddress[index]} | Data Type: {VCType[index]} | Value: {VCValue[index]}");
+                voiceCommandsStored += $"{VCButton[index]}:{VCAddress[index]}:{VCType[index]}:{VCValue[index]};";
+
+            }
+        }
+        public static void commandListHelper(string line)
+        {
+
+            MainFormGlobal.listBox1.Items.Add(line);
+
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            voiceCommandsAdd();
+        }
+
+        private void listBox1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            if (deleteCommandsToggle.Checked == true)
+            {
+                try
+                {
+                    removeButtonCommandsAt(listBox1.SelectedIndex);
+                    refreshCommandList();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
+
             }
         }
 
-        private void button4_Click(object sender, EventArgs e)
+        private void button1_Click_1(object sender, EventArgs e)
         {
-            
-            textBox1.Enabled = false;
-            button4.Enabled = false;
-           // editMode= false;
+            if (deleteCommandsToggle.Checked == true)
+            {
+                clearButtonCommands();
+                refreshCommandList();
+            }
+        }
+
+        private void deleteCommandsToggle_CheckedChanged(object sender, EventArgs e)
+        {
+            if(deleteCommandsToggle.Checked == true)
+            {
+                buttonClearAll.Enabled = true;
+            }
+            else
+            {
+                buttonClearAll.Enabled = false;
+            }
+        }
+
+        private void checkBox2_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBox2.Checked == true)
+            {
+                buttonImport.Enabled = true;
+                buttonExport.Enabled = true;
+            }
+            else
+            {
+                buttonImport.Enabled = false;
+                buttonExport.Enabled = false;
+            }
 
         }
 
-        private void panel1_Paint(object sender, PaintEventArgs e)
+        private void buttonExport_Click(object sender, EventArgs e)
         {
+            string folderPath = @"ExportList"; 
+            string fileName = "export_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".txt"; 
+
+            string filePath = Path.Combine(folderPath, fileName);
+
+            // Create a text file and write some content to it
+            File.WriteAllText(filePath, voiceCommandsStored);
+
+            Process.Start("explorer.exe", "ExportList");
+        }
+
+        private void buttonImport_Click(object sender, EventArgs e)
+        {
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                voiceCommandsStored = importFile(openFileDialog1.FileName);
+                buttonCommands();
+               // refreshCommandList();
+            }
+        }
+        public static string importFile(string path)
+        {
+            try
+            {
+                string contents = "";
+                using (FileStream stream = new FileStream(path, System.IO.FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    using (StreamReader reader = new StreamReader(stream))
+                    {
+                        contents = reader.ReadToEnd();
+                       
+                        
+                    }
+                }
+                return contents;
+
+            }
+            catch (Exception ex)
+            {
+
+               
+                MessageBox.Show("[Text File Reader Error: This error occured while attempting to read the text file: " + ex.Message + "]");
+                return "";
+            }
+        }
+
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("explorer.exe", "https://ko-fi.com/ttsvoicewizard");
 
         }
     }
