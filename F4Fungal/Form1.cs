@@ -101,6 +101,7 @@ namespace F4Fungal
             buttonStop.Enabled = true;
             buttonAdd.Enabled = false;
             deleteCommandsToggle.Enabled= false;
+            buttonClearAll.Enabled = false;
 
 
         }
@@ -155,6 +156,8 @@ namespace F4Fungal
         static List<string> VCType = new List<string>();
         static List<string> VCValue = new List<string>();
 
+        static List<int> VCAutoDisable = new List<int>();
+
 
         public static string voiceCommandsStored = "";
 
@@ -166,6 +169,7 @@ namespace F4Fungal
             VCButton.Clear();
             VCValue.Clear();
             VCType.Clear();
+            VCAutoDisable.Clear();
             //refreshCommandList();
         }
         public static void removeButtonCommandsAt(int index)
@@ -174,13 +178,22 @@ namespace F4Fungal
             VCButton.RemoveAt(index);
             VCValue.RemoveAt(index);
             VCType.RemoveAt(index);
-           // refreshCommandList();
+            VCAutoDisable.RemoveAt(index);
+            // refreshCommandList();
         }
 
         public static void voiceCommandsAdd()
         {
             clearButtonCommands();
-            voiceCommandsStored += $"{MainFormGlobal.textBoxButton.Text}:{MainFormGlobal.textBoxParameter.Text}:{MainFormGlobal.comboBoxType.SelectedItem}:{MainFormGlobal.textBoxValue.Text};";
+
+            int autoDisable = -1;
+            if (MainFormGlobal.checkboxAutoDisable.Checked)
+            {
+                autoDisable = Int32.Parse(MainFormGlobal.textBoxAutoDisable.Text);
+            }
+
+
+            voiceCommandsStored += $"{MainFormGlobal.textBoxButton.Text}:{MainFormGlobal.textBoxParameter.Text}:{MainFormGlobal.comboBoxType.SelectedItem}:{MainFormGlobal.textBoxValue.Text}:{autoDisable};";
 
             buttonCommands();
           //  refreshCommandList();
@@ -230,27 +243,109 @@ namespace F4Fungal
                             System.Diagnostics.Debug.WriteLine("value added: " + s2);
 
                         }
+                        if (count == 5)
+                        {
+                            VCAutoDisable.Add(Int32.Parse(s2));
+                            System.Diagnostics.Debug.WriteLine("value added: " + s2);
+
+                        }
                         count++;
                     }
                 }
             }
             refreshCommandList();
         }
+       private static Dictionary<string, bool> addressStatus = new Dictionary<string, bool>();
         public static void HotkeyPressed(int index)
         {    
                 string address = VCAddress[index];
                 string type = VCType[index];
+            var VCMessage = new OscMessage(address, true);
+            bool value;
 
-                 var message1 = new OscMessage(address, true);
-                 OSCSender.Send(message1);
 
-                 MainFormGlobal.panel1.BackColor = Color.Green;
+            switch (type)
+            {
+                case "Bool":
+                    if (string.Equals(VCValue[index], "true", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        VCMessage = new OscMessage(address, true);
+                    }
+                    if (string.Equals(VCValue[index], "false", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        VCMessage = new OscMessage(address, false);
+                    }
+                    if (string.Equals(VCValue[index], "{toggle}", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        // Toggle logic: If the address exists in the dictionary, invert its current value
+                        if (addressStatus.TryGetValue(address, out bool currentValue))
+                        {
+                            value = !currentValue;
+                            addressStatus[address] = value;
+                            VCMessage = new OscMessage(address, value);
+                        }
+                        else
+                        {
+                            // If the address doesn't exist in the dictionary, assume it's true as per your example
+                            value = true;
+                            addressStatus[address] = value;
+                            VCMessage = new OscMessage(address, value);
+                        }
+                    }
+                    break;
 
-                 Thread.Sleep(100);
 
-                 var message2 = new CoreOSC.OscMessage(address, false);
+                case "Float":
+                    float value1 = float.Parse(VCValue[index]);
+                    VCMessage = new OscMessage(address, value1);
+                    break;
+                case "Int":
+                    int value2 = int.Parse(VCValue[index]);
+                    VCMessage = new OscMessage(address, value2);
+                    break;
+                default:
+                    VCMessage = new OscMessage(address, true);
+                    break;
+            }
 
-                 OSCSender.Send(message2);
+           OSCSender.Send(VCMessage);
+
+            if(VCAutoDisable[index]!=-1)
+            {
+                var VCMessage2 = new OscMessage(address, false);
+
+                Thread.Sleep(VCAutoDisable[index]);
+                switch (type)
+                {
+                    case "Bool":
+                        if (string.Equals(VCValue[index], "true", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            VCMessage2 = new OscMessage(address, false);
+                        }
+                        if (string.Equals(VCValue[index], "false", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            VCMessage2 = new OscMessage(address, true);
+                        }
+
+                        break;
+
+                    case "Float":
+  
+                       // float value1 = float.Parse(VCValue[index]);
+                        VCMessage2 = new OscMessage(address, 0);
+                        break;
+                    case "Int":
+                      //  int value2 = int.Parse(VCValue[index]);
+                        VCMessage2 = new OscMessage(address, 0);
+                        break;
+                    default:
+                        VCMessage2 = new OscMessage(address,false);
+                        break;
+                }
+
+                OSCSender.Send(VCMessage2);
+
+            }
         }
         public static void refreshCommandList()
         {
@@ -258,8 +353,8 @@ namespace F4Fungal
             voiceCommandsStored = "";
             for (var index = 0; index < VCAddress.Count; index++)
             {
-                commandListHelper($"ID: {index + 1} | Phrase: {VCButton[index]} | Address: {VCAddress[index]} | Data Type: {VCType[index]} | Value: {VCValue[index]}");
-                voiceCommandsStored += $"{VCButton[index]}:{VCAddress[index]}:{VCType[index]}:{VCValue[index]};";
+                commandListHelper($"ID: {index + 1} | Phrase: {VCButton[index]} | Address: {VCAddress[index]} | Data Type: {VCType[index]} | Value: {VCValue[index]} | Auto Disable (ms): {VCAutoDisable[index]}");
+                voiceCommandsStored += $"{VCButton[index]}:{VCAddress[index]}:{VCType[index]}:{VCValue[index]}:{VCAutoDisable[index]};";
 
             }
         }
@@ -313,20 +408,7 @@ namespace F4Fungal
             }
         }
 
-        private void checkBox2_CheckedChanged(object sender, EventArgs e)
-        {
-            if (checkBox2.Checked == true)
-            {
-                buttonImport.Enabled = true;
-                buttonExport.Enabled = true;
-            }
-            else
-            {
-                buttonImport.Enabled = false;
-                buttonExport.Enabled = false;
-            }
 
-        }
 
         private void buttonExport_Click(object sender, EventArgs e)
         {
@@ -380,6 +462,18 @@ namespace F4Fungal
         {
             System.Diagnostics.Process.Start("explorer.exe", "https://ko-fi.com/ttsvoicewizard");
 
+        }
+
+        private void checkboxAutoDisable_CheckedChanged(object sender, EventArgs e)
+        {
+            if(checkboxAutoDisable.Checked)            
+           { 
+                textBoxAutoDisable.Enabled = true;
+            }
+            else
+            {
+                textBoxAutoDisable.Enabled = false;
+            }
         }
     }
 }
